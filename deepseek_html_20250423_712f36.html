@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>FrancoAventura: Recolecta Palabras</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: #f0f8ff;
+            font-family: Arial;
+            overflow: hidden;
+        }
+        #game-container {
+            text-align: center;
+        }
+        #game-canvas {
+            background: #e6f7ff;
+            border: 2px solid #333;
+            display: block;
+            margin: 0 auto;
+        }
+        #info {
+            margin: 10px 0;
+            color: #333;
+        }
+        #inventario {
+            margin-top: 10px;
+            padding: 10px;
+            background: #fff;
+            border: 1px dashed #333;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>FrancoAventura</h1>
+        <div id="info">Usa las flechas para moverte y recolecta palabras</div>
+        <canvas id="game-canvas" width="400" height="300"></canvas>
+        <div id="inventario">
+            <h3>Inventario:</h3>
+            <ul id="lista-inventario"></ul>
+        </div>
+    </div>
+
+    <script>
+        // ----- Configuración del Juego -----
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const listaInventario = document.getElementById('lista-inventario');
+
+        // Jugador
+        const jugador = {
+            x: 200,
+            y: 150,
+            radio: 12,
+            velocidad: 3,
+            color: '#0066cc'
+        };
+
+        // Palabras para recolectar
+        const palabras = [
+            { x: 50, y: 50, texto: "Bonjour", color: '#ff3300' },
+            { x: 300, y: 80, texto: "Merci", color: '#009933' },
+            { x: 150, y: 200, texto: "Chapeau", color: '#9900cc' }
+        ];
+
+        // Inventario
+        const inventario = [];
+
+        // Control de teclas
+        const teclas = {};
+        document.addEventListener('keydown', (e) => teclas[e.key] = true);
+        document.addEventListener('keyup', (e) => teclas[e.key] = false);
+
+        // ----- Funciones del Juego -----
+        function actualizarJugador() {
+            if (teclas['ArrowUp']) jugador.y -= jugador.velocidad;
+            if (teclas['ArrowDown']) jugador.y += jugador.velocidad;
+            if (teclas['ArrowLeft']) jugador.x -= jugador.velocidad;
+            if (teclas['ArrowRight']) jugador.x += jugador.velocidad;
+
+            // Limitar al canvas
+            jugador.x = Math.max(jugador.radio, Math.min(canvas.width - jugador.radio, jugador.x));
+            jugador.y = Math.max(jugador.radio, Math.min(canvas.height - jugador.radio, jugador.y));
+        }
+
+        function dibujarJugador() {
+            ctx.fillStyle = jugador.color;
+            ctx.beginPath();
+            ctx.arc(jugador.x, jugador.y, jugador.radio, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function dibujarPalabras() {
+            ctx.font = '16px Arial';
+            palabras.forEach(palabra => {
+                ctx.fillStyle = palabra.color;
+                ctx.fillText(palabra.texto, palabra.x, palabra.y);
+            });
+        }
+
+        function detectarColisiones() {
+            palabras.forEach((palabra, index) => {
+                const distancia = Math.sqrt(
+                    Math.pow(jugador.x - palabra.x, 2) + 
+                    Math.pow(jugador.y - palabra.y, 2)
+                );
+
+                if (distancia < jugador.radio + 15) {
+                    inventario.push(palabra.texto);
+                    actualizarInventario();
+                    palabras.splice(index, 1);
+
+                    // Añadir nueva palabra aleatoria
+                    if (Math.random() > 0.5) {
+                        palabras.push({
+                            x: Math.random() * (canvas.width - 50),
+                            y: Math.random() * (canvas.height - 50),
+                            texto: ["Salut", "Au revoir", "Pomme", "Fromage"][Math.floor(Math.random() * 4)],
+                            color: `#${Math.floor(Math.random() * 16777215).toString(16)}`
+                        });
+                    }
+                }
+            });
+        }
+
+        function actualizarInventario() {
+            listaInventario.innerHTML = '';
+            inventario.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = item;
+                listaInventario.appendChild(li);
+            });
+        }
+
+        // ----- Bucle Principal -----
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            actualizarJugador();
+            dibujarJugador();
+            dibujarPalabras();
+            detectarColisiones();
+            
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Iniciar el juego
+        gameLoop();
+    </script>
+</body>
+</html>
