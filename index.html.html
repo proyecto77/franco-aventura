@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FrancoAventura Moderno</title>
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4895ef;
+            --dark: #2b2d42;
+            --light: #f8f9fa;
+            --success: #4cc9f0;
+            --danger: #f72585;
+            --warning: #f8961e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .game-container {
+            width: 100%;
+            max-width: 800px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+        }
+        
+        .game-header {
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .game-header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .game-header p {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+        
+        .game-body {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .game-body {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .game-canvas-container {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        #game-canvas {
+            background: linear-gradient(45deg, #e3f2fd, #bbdefb);
+            display: block;
+            width: 100%;
+            height: 400px;
+        }
+        
+        .game-sidebar {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .stats-card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+        
+        .stats-card h3 {
+            color: var(--dark);
+            font-size: 1rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .stats-card h3 svg {
+            width: 18px;
+            height: 18px;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .inventory-card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .inventory-card h3 {
+            color: var(--dark);
+            font-size: 1rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        #lista-inventario {
+            list-style: none;
+            flex-grow: 1;
+            overflow-y: auto;
+            max-height: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        #lista-inventario li {
+            background: #f8f9fa;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        #lista-inventario li::before {
+            content: "•";
+            color: var(--accent);
+            font-weight: bold;
+        }
+        
+        .game-footer {
+            background: #f8f9fa;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #e9ecef;
+            gap: 10px;
+        }
+        
+        .controls-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: var(--dark);
+        }
+        
+        .key {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-weight: 600;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+        
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        
+        .btn:hover {
+            background: var(--secondary);
+            transform: translateY(-1px);
+        }
+        
+        .btn svg {
+            width: 16px;
+            height: 16px;
+        }
+        
+        .btn-reset {
+            background: var(--danger);
+        }
+        
+        .btn-reset:hover {
+            background: #d1144a;
+        }
+        
+        .word-collect-animation {
+            position: absolute;
+            font-weight: bold;
+            animation: floatUp 1s ease-out forwards;
+            pointer-events: none;
+            z-index: 10;
+        }
+        
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-50px); }
+        }
+        
+        .player {
+            position: absolute;
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
+            border-radius: 50%;
+            box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.3);
+            transition: transform 0.2s;
+        }
+        
+        .word {
+            position: absolute;
+            font-weight: 600;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .word:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1>FrancoAventura</h1>
+            <p>Explora y recolecta palabras en francés</p>
+        </div>
+        
+        <div class="game-body">
+            <div class="game-canvas-container">
+                <canvas id="game-canvas"></canvas>
+            </div>
+            
+            <div class="game-sidebar">
+                <div class="stats-card">
+                    <h3>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        Estadísticas
+                    </h3>
+                    <div class="stats-grid">
+                        <div>
+                            <div class="stat-value" id="palabras-recolectadas">0</div>
+                            <small>Palabras recolectadas</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="inventory-card">
+                    <h3>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        Tu Inventario
+                    </h3>
+                    <ul id="lista-inventario"></ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="game-footer">
+            <div class="controls-info">
+                <span>Controles:</span>
+                <span class="key">↑</span>
+                <span class="key">↓</span>
+                <span class="key">←</span>
+                <span class="key">→</span>
+            </div>
+            
+            <div class="footer-buttons" style="display: flex; gap: 10px;">
+                <button class="btn" id="btn-nueva-palabra">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Nueva palabra
+                </button>
+                
+                <button class="btn btn-reset" id="btn-reiniciar">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                        <path d="M3 3v5h5"></path>
+                    </svg>
+                    Reiniciar
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuración del juego
+        const config = {
+            playerSpeed: 5,
+            wordColors: ['#4361ee', '#3f37c9', '#4895ef', '#4cc9f0', '#f72585', '#f8961e', '#7209b7'],
+            frenchWords: [
+                "Bonjour", "Salut", "Merci", "Au revoir", "S'il vous plaît", 
+                "Pardon", "Excusez-moi", "Oui", "Non", "Monsieur", 
+                "Madame", "Bienvenue", "Comment ça va", "Ça va", "Bien", 
+                "Mal", "Comme ci comme ça", "Je t'aime", "Amour", "Ami",
+                "Famille", "Père", "Mère", "Frère", "Soeur",
+                "Chat", "Chien", "Maison", "École", "Travail",
+                "Livre", "Stylo", "Cahier", "Fleur", "Arbre",
+                "Ciel", "Soleil", "Lune", "Étoile", "Pluie",
+                "Neige", "Vent", "Eau", "Feu", "Terre",
+                "Rouge", "Bleu", "Vert", "Jaune", "Noir",
+                "Blanc", "Gris", "Orange", "Rose", "Violet",
+                "Un", "Deux", "Trois", "Quatre", "Cinq",
+                "Six", "Sept", "Huit", "Neuf", "Dix",
+                "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi",
+                "Samedi", "Dimanche", "Janvier", "Février", "Mars",
+                "Avril", "Mai", "Juin", "Juillet", "Août",
+                "Septembre", "Octobre", "Novembre", "Décembre", "Printemps",
+                "Été", "Automne", "Hiver", "Aujourd'hui", "Demain",
+                "Hier", "Maintenant", "Toujours", "Jamais", "Parfois",
+                "Manger", "Boire", "Dormir", "Lire", "Écrire",
+                "Parler", "Écouter", "Voir", "Sentir", "Goûter",
+                "Marcher", "Courir", "Sauter", "Danser", "Nager",
+                "Chanter", "Jouer", "Travailler", "Étudier", "Apprendre",
+                "Enseigner", "Voyager", "Visiter", "Acheter", "Vendre",
+                "Donner", "Recevoir", "Prendre", "Mettre", "Ouvrir",
+                "Fermer", "Allumer", "Éteindre", "Commencer", "Finir",
+                "Aider", "Demander", "Répondre", "Chercher", "Trouver",
+                "Perdre", "Gagner", "Choisir", "Préférer", "Aimer",
+                "Détester", "Penser", "Savoir", "Connaître", "Comprendre",
+                "Devoir", "Pouvoir", "Vouloir", "Falloir", "Aller",
+                "Venir", "Arriver", "Partir", "Rester", "Passer",
+                "Retourner", "Tomber", "Monter", "Descendre", "Tourner"
+            ]
+        };
+
+        // Elementos del DOM
+        const canvas = document.getElementById('game-canvas');
+        const ctx = canvas.getContext('2d');
+        const listaInventario = document.getElementById('lista-inventario');
+        const palabrasRecolectadasElement = document.getElementById('palabras-recolectadas');
+        const btnNuevaPalabra = document.getElementById('btn-nueva-palabra');
+        const btnReiniciar = document.getElementById('btn-reiniciar');
+
+        // Ajustar tamaño del canvas
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+
+        // Estado del juego
+        const gameState = {
+            player: {
+                x: 100,
+                y: 100,
+                radius: 12,
+                color: '#4361ee'
+            },
+            words: [],
+            inventory: [],
+            collectedCount: 0
+        };
+
+        // Inicializar palabras
+        function initWords(count = 8) {
+            gameState.words = []; // Limpiar palabras existentes
+            for (let i = 0; i < count; i++) {
+                addRandomWord();
+            }
+        }
+
+        // Añadir palabra aleatoria
+        function addRandomWord() {
+            const word = config.frenchWords[Math.floor(Math.random() * config.frenchWords.length)];
+            const color = config.wordColors[Math.floor(Math.random() * config.wordColors.length)];
+            
+            gameState.words.push({
+                text: word,
+                x: Math.random() * (canvas.width - 100) + 50,
+                y: Math.random() * (canvas.height - 100) + 50,
+                color: color
+            });
+        }
+
+        // Dibujar jugador
+        function drawPlayer() {
+            ctx.beginPath();
+            ctx.arc(gameState.player.x, gameState.player.y, gameState.player.radius, 0, Math.PI * 2);
+            ctx.fillStyle = gameState.player.color;
+            ctx.fill();
+            ctx.shadowColor = 'rgba(67, 97, 238, 0.5)';
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetY = 2;
+            ctx.fill();
+            ctx.shadowColor = 'transparent';
+        }
+
+        // Dibujar palabras
+        function drawWords() {
+            ctx.font = '16px "Segoe UI", Tahoma, Geneva, Verdana, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            gameState.words.forEach(word => {
+                ctx.fillStyle = word.color;
+                ctx.fillText(word.text, word.x, word.y);
+            });
+        }
+
+        // Detectar colisiones
+        function checkCollisions() {
+            gameState.words.forEach((word, wordIndex) => {
+                // Distancia entre jugador y palabra
+                const dx = gameState.player.x - word.x;
+                const dy = gameState.player.y - word.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                // Radio aproximado de la palabra (basado en su longitud)
+                const wordRadius = word.text.length * 5;
+                
+                if (distance < gameState.player.radius + wordRadius) {
+                    // Recolectar palabra
+                    collectWord(wordIndex);
+                }
+            });
+        }
+
+        // Recolectar palabra
+        function collectWord(index) {
+            const word = gameState.words[index];
+            
+            // Añadir al inventario
+            gameState.inventory.push(word.text);
+            gameState.collectedCount++;
+            
+            // Actualizar UI
+            updateInventory();
+            palabrasRecolectadasElement.textContent = gameState.collectedCount;
+            
+            // Mostrar animación
+            showCollectionAnimation(word);
+            
+            // Eliminar palabra y añadir una nueva
+            gameState.words.splice(index, 1);
+            addRandomWord();
+        }
+
+        // Mostrar animación de recolección
+        function showCollectionAnimation(word) {
+            const anim = document.createElement('div');
+            anim.className = 'word-collect-animation';
+            anim.textContent = `+ ${word.text}`;
+            anim.style.color = word.color;
+            anim.style.left = `${word.x + canvas.offsetLeft}px`;
+            anim.style.top = `${word.y + canvas.offsetTop}px`;
+            
+            document.body.appendChild(anim);
+            
+            // Eliminar después de la animación
+            setTimeout(() => {
+                anim.remove();
+            }, 1000);
+        }
+
+        // Actualizar inventario
+        function updateInventory() {
+            listaInventario.innerHTML = '';
+            
+            gameState.inventory.forEach((word, index) => {
+                const li = document.createElement('li');
+                li.textContent = word;
+                
+                // Resaltar la última palabra añadida
+                if (index === gameState.inventory.length - 1) {
+                    li.style.background = 'rgba(67, 97, 238, 0.1)';
+                    li.style.fontWeight = '600';
+                }
+                
+                listaInventario.appendChild(li);
+            });
+            
+            // Hacer scroll al final
+            listaInventario.scrollTop = listaInventario.scrollHeight;
+        }
+
+        // Reiniciar juego
+        function resetGame() {
+            gameState.player.x = canvas.width / 2;
+            gameState.player.y = canvas.height / 2;
+            gameState.inventory = [];
+            gameState.collectedCount = 0;
+            palabrasRecolectadasElement.textContent = '0';
+            listaInventario.innerHTML = '';
+            initWords(8);
+        }
+
+        // Control de teclado
+        const keys = {
+            ArrowUp: false,
+            ArrowDown: false,
+            ArrowLeft: false,
+            ArrowRight: false
+        };
+
+        document.addEventListener('keydown', (e) => {
+            if (keys.hasOwnProperty(e.key)) {
+                keys[e.key] = true;
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (keys.hasOwnProperty(e.key)) {
+                keys[e.key] = false;
+            }
+        });
+
+        // Event listeners para botones
+        btnNuevaPalabra.addEventListener('click', () => {
+            addRandomWord();
+        });
+
+        btnReiniciar.addEventListener('click', () => {
+            resetGame();
+        });
+
+        // Bucle del juego
+        function gameLoop() {
+            // Limpiar canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Mover jugador
+            if (keys.ArrowUp) gameState.player.y -= config.playerSpeed;
+            if (keys.ArrowDown) gameState.player.y += config.playerSpeed;
+            if (keys.ArrowLeft) gameState.player.x -= config.playerSpeed;
+            if (keys.ArrowRight) gameState.player.x += config.playerSpeed;
+            
+            // Limitar al canvas
+            gameState.player.x = Math.max(gameState.player.radius, Math.min(canvas.width - gameState.player.radius, gameState.player.x));
+            gameState.player.y = Math.max(gameState.player.radius, Math.min(canvas.height - gameState.player.radius, gameState.player.y));
+            
+            // Dibujar elementos
+            drawWords();
+            drawPlayer();
+            
+            // Detectar colisiones
+            checkCollisions();
+            
+            // Siguiente frame
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Inicializar
+        window.addEventListener('load', () => {
+            resizeCanvas();
+            initWords(8);
+            gameLoop();
+        });
+
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+        });
+    </script>
+</body>
+</html>
